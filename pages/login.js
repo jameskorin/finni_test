@@ -32,5 +32,6 @@ export default function Login() {
             <button type='submit'>Submit</button>
         </form>
         <div>{errorMessage}</div>
+        <div>Don't have an account? <a href='/signup'>Sign up.</a></div>
     </div>
 }
