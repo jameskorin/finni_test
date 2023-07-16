@@ -16,7 +16,7 @@ export default function Login() {
             password: password,
         });
         if(error === null)
-            router.push('/home');
+            router.push('/patients');
         else
             setErrorMessage(error.toString().substring('AuthAPIError: '.length));
     }
