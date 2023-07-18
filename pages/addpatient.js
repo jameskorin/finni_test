@@ -18,6 +18,12 @@ export default function AddPatient() {
     }]);
     const [error, setError] = useState('');
 
+    // If there is no primary address, default to the first in the list
+    useEffect(() => {
+        if(addresses.filter(e => e.primary).length === 0)
+            setPrimaryAddress(0);
+    },[addresses])
+
     const addPatient =async ()=> {
         
         // Check if form is submittable and return errors for incomplete data
@@ -32,7 +38,6 @@ export default function AddPatient() {
             setError(err);
             return null;
         };
-        
 
         // Add row to the patients table
         const { data, error } = await supabase
