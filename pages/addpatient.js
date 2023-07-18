@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
 import _ from 'lodash'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_KEY);
@@ -17,6 +18,8 @@ export default function AddPatient() {
         primary: true
     }]);
     const [error, setError] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const router = useRouter();
 
     // If there is no primary address, default to the first in the list
     useEffect(() => {
@@ -25,6 +28,9 @@ export default function AddPatient() {
     },[addresses])
 
     const addPatient =async ()=> {
+
+        if(submitting) return null;
+        setSubmitting(true);
         
         // Check if form is submittable and return errors for incomplete data
         let err = '';
@@ -57,6 +63,10 @@ export default function AddPatient() {
         for(let i = 0; i < addresses.length; ++i)
             promises.push(supabase.from('addresses').insert({...addresses[i], patient_id: patient_id}));
         await Promise.all(promises);
+
+        // Go to patients table
+        router.push('/patients');
+        setSubmitting(false);
     }
 
     const addAddress =()=> {
@@ -91,7 +101,7 @@ export default function AddPatient() {
     }
 
     return <div>
-        <form onSubmit={e => {
+        <form disabled={submitting} onSubmit={e => {
             e.preventDefault();
             addPatient();
         }}>
