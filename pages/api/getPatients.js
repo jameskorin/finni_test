@@ -8,7 +8,10 @@ const postgres = {
   port: 5432,
 }
 
+const page_size = 10;
+
 export default async function handler(req, res) {
+  const { page, search } = req.body;
   const pool = new Pool(postgres);
   const r = await pool.query(`
     SELECT
@@ -26,9 +29,25 @@ export default async function handler(req, res) {
     INNER JOIN
       addresses a ON p.id = a.patient_id
     WHERE
-      a.primary = true;
+      a.primary = true
+      ${search === '' ? '' :
+      `
+        AND (
+          p.first_name ILIKE '${search}'
+          OR p.last_name ILIKE '${search}'
+          OR LOWER(CONCAT_WS(' ',p.first_name,p.last_name)) ILIKE '${search}'
+          OR LOWER(CONCAT_WS(' ',p.first_name,p.middle_name,p.last_name)) ILIKE '${search}'
+          OR a.street ILIKE '${search}'
+          OR a.city ILIKE '${search}'
+          OR a.state ILIKE '${search}'
+          OR a.zip ILIKE '${search}'
+        )
+      `}
+    ORDER BY
+      p.id
+    OFFSET ${page} * ${page_size}
+    LIMIT ${page_size};
   `);
 
-  console.log(r);
   return res.status(200).send(r);
 }
