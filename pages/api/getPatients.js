@@ -34,6 +34,7 @@ export default async function handler(req, res) {
       `
         AND (
           p.first_name ILIKE '${search}'
+          OR p.middle_name ILIKE '${search}'
           OR p.last_name ILIKE '${search}'
           OR LOWER(CONCAT_WS(' ',p.first_name,p.last_name)) ILIKE '${search}'
           OR LOWER(CONCAT_WS(' ',p.first_name,p.middle_name,p.last_name)) ILIKE '${search}'

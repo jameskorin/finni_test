@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
-
-const page_length = 10;
+import UI from '../ui/patients'
 
 export default function Patients() {
 
@@ -35,49 +34,11 @@ export default function Patients() {
         setFetched(true);
     }
 
-    return <div>
-        {/* Search bar */}
-        <input placeholder='🔍 Search' value={search} 
-        onChange={e => setSearch(e.target.value)}/>
-
-        {/* Searching */}
-        {searching &&
-        <div>Fetching Patient Data...</div>}
-
-        {/* No patient data */}
-        {!searching && fetched && patients.length === 0 &&
-        <div>
-            No Patient Data
-            <a href='/addpatient'>Add Patient Data</a>
-        </div>}
-
-        {/* Table of patient data */}
-        <table>
-            <tbody>
-                {patients.map((item,index) => (
-                    <tr key={`${item.last_name}_${index}`}>
-                        <td>{item.last_name}</td>
-                        <td>{item.first_name}</td>
-                        <td>{item.middle_name}</td>
-                        <td>{item.date_of_birth.split("T")[0]}</td>
-                        <td>{item.street}</td>
-                        <td>{item.city}</td>
-                        <td>{item.state}</td>
-                        <td>{item.zip}</td>
-                        <td><a href={`/edit?id=${item.id}`}>Edit</a></td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-        <div>
-            <button disabled={searching || page <= 0} 
-            onClick={() => setPage(page - 1)}>
-                prev
-            </button>
-            <button disabled={patients.length < page_length || searching}
-            onClick={() => setPage(page + 1)}>
-                next
-            </button>
-        </div>
-    </div>
+    return <UI searching={searching}
+    fetched={fetched}
+    patients={patients}
+    search={search}
+    setSearch={setSearch}
+    page={page}
+    setPage={setPage}/>;
 }
