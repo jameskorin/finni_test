@@ -1,66 +1,55 @@
 import React, { useEffect, useState } from 'react'
-import _ from 'lodash'
 import axios from 'axios'
-import { createClient } from '@supabase/supabase-js'
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_KEY);
 
 const page_length = 10;
 
 export default function Patients() {
 
+    const [searching, setSearching] = useState(false);
     const [fetched, setFetched] = useState(false);
-    const [uid, setUid] = useState('');
     const [patients, setPatients] = useState([]);
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(0);
-    const [atEnd, setAtEnd] = useState(false);
 
     useEffect(() => {
-        getUser();
-    },[])
-
-    useEffect(() => {
+        getPage();
+    }, [page])
+    
+    // Wait until the user has stopped typing for a quarter second to reduce overlapping queries
+    useEffect(() => { const delay = setTimeout(() => {
         if(page === 0)
-            getPatients();
-        setPage(0);
-    },[search])
-
-    useEffect(() => {
-        if(uid !== '')
-            getPatients();
-    },[uid, page])
-
-    const getUser =async ()=> {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUid(user.id);
-    }
-
-    const getPatients =async ()=> {
-        setFetched(false);
-        const p = (await axios.post('/api/getPatients',{ 
-            page: page, 
-            search: search.trim() 
-        })).data.rows;
-        setAtEnd(p.length < page_length);
-        setPatients(p.length > 0 ? p : patients);
+            getPage();
+            setPage(0);
+        }, 250);
+        return () => clearTimeout(delay)
+    }, [search])
+    
+    const getPage =async ()=> {
+        setSearching(true);
+        const r = await axios.post('/api/getPatients', {
+            search: search.trim(),
+            page: page
+        });
+        setPatients(r.data.rows);
+        setSearching(false);
         setFetched(true);
     }
 
     return <div>
-        
-        {/* Fetching */}
-        {!fetched &&
+        {/* Search bar */}
+        <input placeholder='🔍 Search' value={search} 
+        onChange={e => setSearch(e.target.value)}/>
+
+        {/* Searching */}
+        {searching &&
         <div>Fetching Patient Data...</div>}
 
         {/* No patient data */}
-        {fetched && patients.length === 0 &&
+        {!searching && fetched && patients.length === 0 &&
         <div>
             No Patient Data
             <a href='/addpatient'>Add Patient Data</a>
         </div>}
-
-        <input placeholder='🔍 Search' value={search} 
-        onChange={e => setSearch(e.target.value)}/>
 
         {/* Table of patient data */}
         <table>
@@ -81,11 +70,11 @@ export default function Patients() {
             </tbody>
         </table>
         <div>
-            <button disabled={!fetched || page <= 0} 
+            <button disabled={searching || page <= 0} 
             onClick={() => setPage(page - 1)}>
                 prev
             </button>
-            <button disabled={fetched && atEnd || !fetched}
+            <button disabled={patients.length < page_length || searching}
             onClick={() => setPage(page + 1)}>
                 next
             </button>
