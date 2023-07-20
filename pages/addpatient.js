@@ -31,7 +31,7 @@ export default function AddPatient({
             setFirst(r.first_name);
             setMiddle(r.middle_name);
             setLast(r.last_name);
-            setDob(r.date_of_birth);
+            setDob(r.date_of_birth.split("T")[0]);
             setAddresses(r.addresses.sort((a,b) => a.primary ? -1:1));
         }
     },[])
@@ -116,27 +116,23 @@ export default function AddPatient({
         // Update existing addressses
         let promises = [];
         const existing_addresses = addresses.filter(e => existingRecord.addresses.find(a => a.id === e.id) !== undefined);
-        console.log(existing_addresses);
         for(let i = 0; i < existing_addresses.length; ++i)
             promises.push(supabase.from('addresses').update(existing_addresses[i]).eq('id',existing_addresses[i].id));
 
         // Create new rows for each new address
         const new_addresses = addresses.filter(e => existingRecord.addresses.find(a => a.id === e.id) === undefined);
-        console.log(new_addresses);
         for(let i = 0; i < new_addresses.length; ++i)
             promises.push(supabase.from('addresses').insert({...new_addresses[i], patient_id: patient_id}));
 
         // Delete addresses that have been removed
         const deleted_addresses = existingRecord.addresses.filter(e => addresses.find(a => a.id === e.id) === undefined);
-        console.log(deleted_addresses);
         for(let i = 0; i < deleted_addresses.length; ++i)
             promises.push(supabase.from('addresses').delete().eq('id',deleted_addresses[i].id));
         
         const r = await Promise.all(promises);
-        console.log(r);
 
         // Go to patients table
-        // router.push('/patients');
+        router.push('/patients');
         setSubmitting(false);
     }
 

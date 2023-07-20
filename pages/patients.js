@@ -52,7 +52,7 @@ export default function Patients() {
                         <td>{item.last_name}</td>
                         <td>{item.first_name}</td>
                         <td>{item.middle_name}</td>
-                        <td>{item.date_of_birth}</td>
+                        <td>{item.date_of_birth.split("T")[0]}</td>
                         <td>{item.street}</td>
                         <td>{item.city}</td>
                         <td>{item.state}</td>
