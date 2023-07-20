@@ -4,7 +4,10 @@ import _ from 'lodash'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_KEY);
 
-export default function AddPatient() {
+export default function AddPatient({
+    edit,
+    existingRecord
+}) {
 
     const [first, setFirst] = useState('');
     const [middle, setMiddle] = useState('');
@@ -20,6 +23,18 @@ export default function AddPatient() {
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const router = useRouter();
+
+    // If editing an existing record, populate with that data
+    useEffect(() => {
+        if(edit) {
+            const r = existingRecord;
+            setFirst(r.first_name);
+            setMiddle(r.middle_name);
+            setLast(r.last_name);
+            setDob(r.date_of_birth);
+            setAddresses(r.addresses.sort((a,b) => a.primary ? -1:1));
+        }
+    },[])
 
     // If there is no primary address, default to the first in the list
     useEffect(() => {
@@ -69,6 +84,62 @@ export default function AddPatient() {
         setSubmitting(false);
     }
 
+    const saveChanges =async ()=> {
+        if(submitting) return null;
+        setSubmitting(true);
+        
+        // Check if form is submittable and return errors for incomplete data
+        let err = '';
+        if(addresses.filter(e => e.street.trim() === '' || e.city.trim() === '' || e.state === '' || e.zip.trim() === '').length > 0)
+            err = 'Do not leave any fields blank on addresses';
+        if(dob === '')
+            err = 'Please enter a valid date of birth';
+        if(first.trim() === '' || last.trim() === '')
+            err = 'Please enter full name.';
+        if(err !== '') {
+            setError(err);
+            return null;
+        };
+
+        const patient_id = existingRecord.id;
+
+        // Update row on the patients table
+        const { data, error } = await supabase
+        .from('patients')
+        .update({ 
+            first_name: first.trim(),
+            middle_name: middle.trim(),
+            last_name: last.trim(),
+            date_of_birth: dob.trim()
+        }).eq('id',patient_id);
+
+        // Update existing addressses
+        let promises = [];
+        const existing_addresses = addresses.filter(e => existingRecord.addresses.find(a => a.id === e.id) !== undefined);
+        console.log(existing_addresses);
+        for(let i = 0; i < existing_addresses.length; ++i)
+            promises.push(supabase.from('addresses').update(existing_addresses[i]).eq('id',existing_addresses[i].id));
+
+        // Create new rows for each new address
+        const new_addresses = addresses.filter(e => existingRecord.addresses.find(a => a.id === e.id) === undefined);
+        console.log(new_addresses);
+        for(let i = 0; i < new_addresses.length; ++i)
+            promises.push(supabase.from('addresses').insert({...new_addresses[i], patient_id: patient_id}));
+
+        // Delete addresses that have been removed
+        const deleted_addresses = existingRecord.addresses.filter(e => addresses.find(a => a.id === e.id) === undefined);
+        console.log(deleted_addresses);
+        for(let i = 0; i < deleted_addresses.length; ++i)
+            promises.push(supabase.from('addresses').delete().eq('id',deleted_addresses[i].id));
+        
+        const r = await Promise.all(promises);
+        console.log(r);
+
+        // Go to patients table
+        // router.push('/patients');
+        setSubmitting(false);
+    }
+
     const addAddress =()=> {
         let c = _.cloneDeep(addresses);
         c.push({
@@ -103,11 +174,15 @@ export default function AddPatient() {
     return <div>
         <form disabled={submitting} onSubmit={e => {
             e.preventDefault();
-            addPatient();
+            if(edit) {
+                saveChanges();
+            } else {
+                addPatient();
+            }
         }}>
-            <input placeholder='First Name' onChange={e => setFirst(e.target.value)}/>
-            <input placeholder='Middle Name' onChange={e => setMiddle(e.target.value)}/>
-            <input placeholder='Last Name' onChange={e => setLast(e.target.value)}/>
+            <input placeholder='First Name' onChange={e => setFirst(e.target.value)} value={first}/>
+            <input placeholder='Middle Name' onChange={e => setMiddle(e.target.value)} value={middle}/>
+            <input placeholder='Last Name' onChange={e => setLast(e.target.value)} value={last}/>
 
             <input type='date' placeholder='Date of Birth' value={dob} onChange={e => setDob(e.target.value)}/>
 
@@ -135,7 +210,7 @@ export default function AddPatient() {
                 addAddress();
             }}>New Address</button>
 
-            <button type='submit'>Create Patient</button>
+            <button type='submit'>{edit ? 'Save Changes' : 'Create Patient'}</button>
         </form>
         <div>{error}</div>
     </div>
