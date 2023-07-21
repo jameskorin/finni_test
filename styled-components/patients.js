@@ -1,8 +1,11 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 export const Outer = styled.div`
     color: #333333;
     font-size: 16px;
+
+    @import url("https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap");
+    font-family: "Roboto", sans-serif;
 `;
 
 export const Header = styled.div`
@@ -22,13 +25,16 @@ export const SearchInput = styled.input`
 `;
 
 export const Message = styled.div`
+    margin: 20px 0px;
 
+    ${props => props.margin && css`
+        margin: ${props => props.margin};
+    `}
 `;
 
 export const Table = styled.table`
     border-collapse: collapse; 
-    width: 750px;
-
+    width: 850px;
     td {
         padding: 5px;
     }
@@ -47,8 +53,14 @@ export const Nav = styled.div`
 
 export const TopRow = styled.div`
     width: 100%;
-    max-width: 750px;
+    max-width: 850px;
     display: flex;
     align-items: baseline;
     justify-content: space-between;
+
+    div {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+    }
 `;

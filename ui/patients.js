@@ -8,6 +8,8 @@ import {
     Nav,
     TopRow
 } from '../styled-components/patients'
+import AuthHeader from './authHeader'
+
 const page_length = 10;
 export default function UI({
     searching,
@@ -20,30 +22,33 @@ export default function UI({
 }) {
     return <Outer>
 
+        <AuthHeader/>
+
         <Header>Patients</Header>
 
         {/* Search bar and actions row */}
         <TopRow>
-            {/* Search bar */}
-            <SearchInput placeholder='🔍 Search' value={search} 
-            onChange={e => setSearch(e.target.value)}/>
+            <div>
+                {/* Search bar */}
+                <SearchInput placeholder='🔍 Search' value={search} 
+                onChange={e => setSearch(e.target.value)}/>
+                
+                {searching &&
+                <Message margin={`0px 20px`}>Fetching Patient Data...</Message>}
+            </div>
 
             {/* Link to /addpatient */}
             <a href='/addpatient'>Add patient</a>
         </TopRow>
-
-        {/* Searching */}
-        {searching &&
-        <Message>Fetching Patient Data...</Message>}
-
+        
         {/* No patient data */}
         {!searching && fetched && patients.length === 0 &&
         <Message>
-            No Patient Data
-            <a href='/addpatient'>Add Patient Data</a>
+            {search.trim() === '' ? 'No Patient Data' : `No patients found under "${search}"`}
         </Message>}
 
         {/* Table of patient data */}
+        {patients.length > 0 &&
         <Table>
             <thead>
                 <tr>
@@ -72,7 +77,7 @@ export default function UI({
                     </tr>
                 ))}
             </tbody>
-        </Table>
+        </Table>}
 
         <Nav>
             <button disabled={searching || page <= 0} 

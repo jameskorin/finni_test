@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import _ from 'lodash'
 import { states } from '../util/states'
+import AuthHeader from '@/ui/authHeader'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_KEY);
 
@@ -169,6 +170,7 @@ export default function AddPatient({
     }
 
     return <div>
+        <AuthHeader/>
         <form disabled={submitting} onSubmit={e => {
             e.preventDefault();
             if(edit) {

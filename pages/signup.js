@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/router'
+import { Outer, Header, Form, Input, Button, Message } from '../styled-components/logInSignUp'
 
 export default function Signup() {
     
@@ -9,6 +10,16 @@ export default function Signup() {
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const router = useRouter();
+
+    useEffect(() => {
+        getAuth();
+    },[])
+
+    const getAuth =async ()=> {
+        const { data, error } = await supabase.auth.getSession();
+        if(data.session !== null)
+            router.push('/patients');
+    }
 
     const signup =async ()=> {
         const { data, error } = await supabase.auth.signUp({
@@ -21,17 +32,17 @@ export default function Signup() {
             setErrorMessage(error.toString().substring('AuthAPIError: '.length));
     }
 
-    return <div>
-        <div>Sign Up</div>
-        <form onSubmit={e => {
+    return <Outer>
+        <Header>Sign Up</Header>
+        <Form onSubmit={e => {
             e.preventDefault();
             signup();
         }}>
-            <input placeholder='Email' onChange={e => setEmail(e.target.value)} type='email'/>
-            <input placeholder='Password' onChange={e => setPassword(e.target.value)} type='password'/>
-            <button type='submit'>Submit</button>
-        </form>
-        <div>{errorMessage}</div>
-        <div>Already have an account? <a href='/login'>Log in.</a></div>
-    </div>
+            <Input placeholder='Email' onChange={e => setEmail(e.target.value)} type='email'/>
+            <Input placeholder='Password' onChange={e => setPassword(e.target.value)} type='password'/>
+            <Button type='submit'>Submit</Button>
+        </Form>
+        <Message>{errorMessage}</Message>
+        <Message>Already have an account? <a href='/login'>Log in.</a></Message>
+    </Outer>
 }
