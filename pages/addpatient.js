@@ -36,8 +36,8 @@ export default function AddPatient({
             setLast(r.last_name);
             setDob(r.date_of_birth.split("T")[0]);
             setAddresses(r.addresses.sort((a,b) => a.primary ? -1:1));
-            const keys = Object.keys(existingRecord.custom_data);
-            const values = Object.values(existingRecord.custom_data);
+            const keys = existingRecord.custom_data === null ? [] : Object.keys(existingRecord.custom_data);
+            const values = existingRecord.custom_data === null ? [] : Object.values(existingRecord.custom_data);
             let pairs = [];
             for(let i = 0; i < keys.length; ++i)
                 pairs.push({[keys[i]]:values[i]});

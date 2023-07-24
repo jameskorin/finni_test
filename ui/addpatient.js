@@ -26,6 +26,9 @@ export default function UI({
     } = state;
     return <div>
         <AuthHeader/>
+
+        <a href='/patients'>👈 all patients</a>
+
         <form disabled={submitting} onSubmit={e => {
             e.preventDefault();
             if(edit) {
