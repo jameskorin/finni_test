@@ -210,6 +210,7 @@ export default function AddPatient({
         submitting,
         addPatient,
         saveChanges,
+        setPrimaryAddress,
         addAddress,
         removeAddress,
         editAddress,
