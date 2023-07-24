@@ -51,11 +51,6 @@ export default function AddPatient({
             setPrimaryAddress(0);
     },[addresses])
 
-    useEffect(() => {
-        console.log(arbitraries);
-        console.log(ArrayToObj(arbitraries));
-    },[arbitraries])
-
     const addPatient =async ()=> {
 
         if(submitting) return null;

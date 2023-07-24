@@ -16,11 +16,24 @@ export default function Edit() {
 
     const getExistingRecord =async ()=> {
         const id = window.location.search.substring('?id='.length);
-        console.log(id);
-        const r = await axios.post('/api/getPatient', {
-            id: id
-        });
-        setExistingRecord(r.data.rows[0]);
+        let promises = [
+            supabase.from('patients')
+            .select(`
+                first_name,
+                middle_name,
+                last_name,
+                date_of_birth,
+                custom_data,
+                id
+            `).eq('id',id),
+            supabase.from('addresses')
+            .select()
+            .eq('patient_id',id)
+        ];
+        const p = await Promise.all(promises);
+        const patient = p[0].data[0];
+        const addresses = p[1].data;
+        setExistingRecord({...patient,addresses:addresses});
     }
 
     if(existingRecord === null) return null;
