@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import _ from 'lodash'
-import { states } from '../util/states'
-import AuthHeader from '@/ui/authHeader'
+import UI from '../ui/addpatient'
 import { createClient } from '@supabase/supabase-js'
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_KEY);
 
@@ -22,6 +21,7 @@ export default function AddPatient({
         zip: '',
         primary: true
     }]);
+    const [arbitraries, setArbitraries] = useState([{"":""}]);
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const router = useRouter();
@@ -30,11 +30,18 @@ export default function AddPatient({
     useEffect(() => {
         if(edit) {
             const r = existingRecord;
+            console.log(r);
             setFirst(r.first_name);
             setMiddle(r.middle_name);
             setLast(r.last_name);
             setDob(r.date_of_birth.split("T")[0]);
             setAddresses(r.addresses.sort((a,b) => a.primary ? -1:1));
+            const keys = Object.keys(existingRecord.custom_data);
+            const values = Object.values(existingRecord.custom_data);
+            let pairs = [];
+            for(let i = 0; i < keys.length; ++i)
+                pairs.push({[keys[i]]:values[i]});
+            setArbitraries(pairs);
         }
     },[])
 
@@ -43,6 +50,11 @@ export default function AddPatient({
         if(addresses.filter(e => e.primary).length === 0)
             setPrimaryAddress(0);
     },[addresses])
+
+    useEffect(() => {
+        console.log(arbitraries);
+        console.log(ArrayToObj(arbitraries));
+    },[arbitraries])
 
     const addPatient =async ()=> {
 
@@ -69,7 +81,8 @@ export default function AddPatient({
             first_name: first.trim(),
             middle_name: middle.trim(),
             last_name: last.trim(),
-            date_of_birth: dob.trim()
+            date_of_birth: dob.trim(),
+            custom_data: ArrayToObj(arbitraries)
         }).select();
 
         // Get id of the new row
@@ -112,7 +125,8 @@ export default function AddPatient({
             first_name: first.trim(),
             middle_name: middle.trim(),
             last_name: last.trim(),
-            date_of_birth: dob.trim()
+            date_of_birth: dob.trim(),
+            custom_data: ArrayToObj(arbitraries)
         }).eq('id',patient_id);
 
         // Update existing addressses
@@ -169,48 +183,51 @@ export default function AddPatient({
         setAddresses(c);
     }
 
-    return <div>
-        <AuthHeader/>
-        <form disabled={submitting} onSubmit={e => {
-            e.preventDefault();
-            if(edit) {
-                saveChanges();
-            } else {
-                addPatient();
-            }
-        }}>
-            <input placeholder='First Name' onChange={e => setFirst(e.target.value)} value={first}/>
-            <input placeholder='Middle Name' onChange={e => setMiddle(e.target.value)} value={middle}/>
-            <input placeholder='Last Name' onChange={e => setLast(e.target.value)} value={last}/>
+    const addArbitrary =()=> {
+        let c = _.cloneDeep(arbitraries);
+        c.push({"":""});
+        setArbitraries(c);
+    }
+    const removeArbitrary =(index)=> {
+        let c = _.cloneDeep(arbitraries);
+        c.splice(index,1);
+        setArbitraries(c);
+    }
+    const editArbitrary =(index, field, value)=> {
+        let c = _.cloneDeep(arbitraries);
+        c[index] = { [field]: value };
+        setArbitraries(c);
+    }
 
-            <input type='date' placeholder='Date of Birth' value={dob} onChange={e => setDob(e.target.value)}/>
+    const state = {
+        first, setFirst,
+        middle, setMiddle,
+        last, setLast,
+        dob, setDob,
+        addresses,
+        arbitraries,
+        error,
+        submitting,
+        addPatient,
+        saveChanges,
+        addAddress,
+        removeAddress,
+        editAddress,
+        addArbitrary,
+        removeArbitrary,
+        editArbitrary,
+        edit
+    };
 
-            {/* Addresses */}
-            {addresses.map((item, index) => (
-                <div key={`address_${index}`}>
-                    <input placeholder='Street' onChange={e => editAddress(index, 'street', e.target.value)} value={item.street}/>
-                    <input placeholder='City' onChange={e => editAddress(index, 'city', e.target.value)} value={item.city}/>
-                    <select placeholder='State' onChange={e => editAddress(index, 'state', e.target.value)} value={item.state}>
-                        <option selected={item.state === ''} value='' disabled>State</option>
-                        {states.map((item_state, index_state) => (
-                            <option value={item_state} key={`${index}_${item_state}`}>{item_state}</option>
-                        ))}
-                    </select>
-                    <input placeholder='Zip' onChange={e => editAddress(index, 'zip', e.target.value)} value={item.zip}/>
-                    <input type='radio' name='primary_address' onClick={e => setPrimaryAddress(index)} checked={item.primary}/>
-                    <button disabled={addresses.length <= 1} onClick={e => {
-                        e.preventDefault();
-                        removeAddress(index)
-                    }}>Remove Address</button>
-                </div>
-            ))}
-            <button onClick={e => {
-                e.preventDefault();
-                addAddress();
-            }}>New Address</button>
+    return <UI state={state}/>;
+}
 
-            <button type='submit'>{edit ? 'Save Changes' : 'Create Patient'}</button>
-        </form>
-        <div>{error}</div>
-    </div>
+function ArrayToObj(obj) {
+    const res = {};
+    for(let i = 0; i < obj.length; ++i) {
+        const key = Object.keys(obj[i])[0];
+        const value = Object.values(obj[i])[0];
+        Object.assign(res,{[key]:value});
+    }
+    return res;
 }

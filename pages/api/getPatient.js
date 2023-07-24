@@ -17,6 +17,7 @@ export default async function handler(req, res) {
         p.middle_name,
         p.last_name,
         p.date_of_birth,
+        p.custom_data,
         p.id,
         (
             SELECT json_agg(json_build_object('street', a.street, 'city', a.city, 'state', a.state, 'zip', a.zip, 'primary', a.primary, 'id', a.id))
