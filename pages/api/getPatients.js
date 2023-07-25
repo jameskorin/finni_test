@@ -1,5 +1,8 @@
 import { Pool } from 'pg'
 
+import { createClient } from '@supabase/supabase-js'
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_KEY);
+
 const postgres = {
   user: 'postgres',
   host: 'db.jmzstcremutniiksvvjp.supabase.co',
@@ -11,8 +14,13 @@ const postgres = {
 const page_size = 10;
 
 export default async function handler(req, res) {
+  const jwt = req.headers.authorization.split(' ')[1];
   const { page, search } = req.body;
   const pool = new Pool(postgres);
+
+  // Get user id from session from token
+  const { data: { user } } = await supabase.auth.getUser(jwt);
+  
   const r = await pool.query(`
     SELECT
       p.first_name,
@@ -29,6 +37,7 @@ export default async function handler(req, res) {
     INNER JOIN
       addresses a ON p.id = a.patient_id
     WHERE
+      p.created_by = '${user.id}' AND
       a.primary = true
       ${search === '' ? '' :
       `
@@ -49,6 +58,5 @@ export default async function handler(req, res) {
     OFFSET ${page} * ${page_size}
     LIMIT ${page_size};
   `);
-
   return res.status(200).send(r);
 }

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import UI from '../ui/patients'
+import { createClient } from '@supabase/supabase-js'
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_KEY);
 
 export default function Patients() {
 
@@ -25,10 +27,17 @@ export default function Patients() {
     
     const getPage =async ()=> {
         setSearching(true);
+
+        
+        const { data, error } = await supabase.auth.getSession();
+        console.log(data.session.access_token);
+        const config = {
+            headers: { Authorization: `Bearer ${data.session.access_token}` }
+        };
         const r = await axios.post('/api/getPatients', {
             search: search.trim(),
             page: page
-        });
+        }, config);
         setPatients(r.data.rows);
         setSearching(false);
         setFetched(true);
