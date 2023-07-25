@@ -51,6 +51,7 @@ export default function UI({
                 addPatient();
             }
         }}>
+            <button name="submit" value="wanted" class="hidden-default" tabindex="-1" style={{display: 'none'}}></button>
             <SectionHeader>Patient Data</SectionHeader>
             <Input placeholder='First Name' onChange={e => setFirst(e.target.value)} value={first}/>
             <Input placeholder='Middle Name' onChange={e => setMiddle(e.target.value)} value={middle}/>
